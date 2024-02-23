@@ -16,5 +16,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           golangci_lint_flags: "--config=./.golangci.yml ./..."
-          fale_on_error: true
+          fail_on_error: true
           reporter: "github-pr-review"
