@@ -6,16 +6,11 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/tetran/go-web-app-example/config"
 )
 
 func run(ctx context.Context) error {
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	cfg, err := config.New()
 	if err != nil {
 		return err
@@ -31,7 +26,6 @@ func run(ctx context.Context) error {
 
 	mux := NewMux()
 	s := NewServer(l, mux)
-
 	return s.Run(ctx)
 }
 
