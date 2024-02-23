@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/tetran/go-web-app-example/config"
-	"golang.org/x/sync/errgroup"
 )
 
 func run(ctx context.Context) error {
@@ -31,36 +29,10 @@ func run(ctx context.Context) error {
 	url := fmt.Sprintf("http://%s", l.Addr())
 	log.Printf("Server is running at %s", url)
 
-	// No need to set `Addr` field, because we use the listener passed as an argument
-	s := &http.Server{
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// For experimenting with the graceful shutdown
-			// time.Sleep(5 * time.Second)
+	mux := NewMux()
+	s := NewServer(l, mux)
 
-			fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
-		}),
-	}
-
-	eg, ctx := errgroup.WithContext(ctx)
-	// Start the server in a goroutine
-	eg.Go(func() error {
-		// http.ErrServerClosed means the server was closed gracefully, so it's not an error.
-		if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
-			log.Printf("failed to close: %+v", err)
-			return err
-		}
-
-		return nil
-	})
-
-	// Wait for the context to be done
-	<-ctx.Done()
-	if err := s.Shutdown(context.Background()); err != nil {
-		log.Printf("failed to shutdown: %+v", err)
-	}
-
-	// Wait for the goroutine to finish
-	return eg.Wait()
+	return s.Run(ctx)
 }
 
 func main() {
