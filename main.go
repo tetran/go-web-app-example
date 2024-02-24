@@ -5,55 +5,33 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"os"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/tetran/go-web-app-example/config"
 )
 
-func run(ctx context.Context, l net.Listener) error {
-	// No need to set `Addr` field, because we use the listener passed as an argument
-	s := &http.Server{
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
-		}),
+func run(ctx context.Context) error {
+	cfg, err := config.New()
+	if err != nil {
+		return err
 	}
 
-	eg, ctx := errgroup.WithContext(ctx)
-	// Start the server in a goroutine
-	eg.Go(func() error {
-		// http.ErrServerClosed means the server was closed gracefully, so it's not an error.
-		if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
-			log.Printf("failed to close: %+v", err)
-			return err
-		}
-
-		return nil
-	})
-
-	// Wait for the context to be done
-	<-ctx.Done()
-	if err := s.Shutdown(context.Background()); err != nil {
-		log.Printf("failed to shutdown: %+v", err)
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
 	}
 
-	// Wait for the goroutine to finish
-	return eg.Wait()
+	url := fmt.Sprintf("http://%s", l.Addr())
+	log.Printf("Server is running at %s", url)
+
+	mux := NewMux()
+	s := NewServer(l, mux)
+	return s.Run(ctx)
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Printf("Specify the port number as the first argument")
-		os.Exit(1)
-	}
-	p := os.Args[1]
-
-	l, err := net.Listen("tcp", ":"+p)
-	if err != nil {
-		log.Fatalf("failed to listen port %s: %v", p, err)
-	}
-
-	if err := run(context.Background(), l); err != nil {
+	if err := run(context.Background()); err != nil {
 		fmt.Printf("failed to terminate server: %v", err)
+		os.Exit(1)
 	}
 }
