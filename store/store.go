@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"sort"
 
 	"github.com/tetran/go-web-app-example/entity"
 )
@@ -28,5 +29,10 @@ func (ts *TaskStore) All() entity.Tasks {
 	for _, t := range ts.Tasks {
 		tasks = append(tasks, t)
 	}
+
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].ID < tasks[j].ID
+	})
+
 	return tasks
 }
