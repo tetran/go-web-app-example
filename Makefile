@@ -23,6 +23,12 @@ ps: ## Check container status
 test: ## Run tests
 	go test -race -shuffle=on ./...
 
+dry-migrate: ## Try migration
+	mysqldef -u gotodo -p gotodo -h 127.0.0.1 -P 13306 gotodo --dry-run < ./_tools/mysql/schema.sql
+
+migrate:  ## Execute migration
+	mysqldef -u gotodo -p gotodo -h 127.0.0.1 -P 13306 gotodo < ./_tools/mysql/schema.sql
+
 help: # Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 				awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
