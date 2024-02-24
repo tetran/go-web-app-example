@@ -8,12 +8,12 @@ type Clocker interface {
 
 type RealClocker struct{}
 
-func (c *RealClocker) Now() time.Time {
+func (c RealClocker) Now() time.Time {
 	return time.Now()
 }
 
 type FixedClocker struct{}
 
-func (c *FixedClocker) Now() time.Time {
+func (c FixedClocker) Now() time.Time {
 	return time.Date(2022, 5, 10, 12, 24, 56, 0, time.UTC)
 }
