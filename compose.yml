@@ -12,7 +12,7 @@ services:
       DB_PORT: 3306
       DB_USER: gotodo
       DB_PASSWORD: gotodo
-      DB_DATABASE: gotodo
+      DB_NAME: gotodo
     volumes:
       - .:/app
     ports:
