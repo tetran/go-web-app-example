@@ -8,7 +8,30 @@ services:
     environment:
       TODO_ENV: dev
       PORT: 8080
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: gotodo
+      DB_PASSWORD: gotodo
+      DB_NAME: gotodo
     volumes:
       - .:/app
     ports:
       - "18000:8080"
+
+  db:
+    image: mysql:8.0.29
+    platform: linux/arm64
+    container_name: gotodo-db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: gotodo
+      MYSQL_USER: gotodo
+      MYSQL_PASSWORD: gotodo
+    volumes:
+      - gotodo-db-data:/var/lib/mysql
+      - $PWD/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
+    ports:
+      - "13306:3306"
+
+volumes:
+  gotodo-db-data:
