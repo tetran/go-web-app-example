@@ -7,6 +7,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3360
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
     services:
       mysql:
         image: mysql:8
@@ -22,6 +27,15 @@ jobs:
           MYSQL_DATABASE: gotodo
           MYSQL_USER: gotodo
           MYSQL_PASSWORD: gotodo
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/setup-go@v3
         with:

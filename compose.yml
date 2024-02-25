@@ -13,6 +13,8 @@ services:
       DB_USER: gotodo
       DB_PASSWORD: gotodo
       DB_NAME: gotodo
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     volumes:
       - .:/app
     ports:
@@ -33,5 +35,14 @@ services:
     ports:
       - "13306:3306"
 
+  redis:
+    image: redis:latest
+    container_name: gotodo-redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - gotodo-redis-data:/data
+
 volumes:
   gotodo-db-data:
+  gotodo-redis-data:
