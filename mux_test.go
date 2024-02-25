@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/tetran/go-web-app-example/config"
@@ -17,8 +18,12 @@ func TestNewMux(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create config: %v", err)
 	}
-	cfg.DBHost = "127.0.0.1"
-	cfg.DBPort = 13306
+
+	// for local development (not in CI)
+	if os.Getenv("CI") == "" {
+		cfg.DBHost = "127.0.0.1"
+		cfg.DBPort = 13306
+	}
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/health", nil)
