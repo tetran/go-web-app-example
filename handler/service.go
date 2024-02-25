@@ -1,6 +1,6 @@
 package handler
 
-//go:generate go run github.com/matryer/moq -out moq_test.go . ListTasksService AddTaskService
+//go:generate go run github.com/matryer/moq -out moq_test.go . ListTasksService AddTaskService RegisterUserService
 
 import (
 	"context"
@@ -14,4 +14,8 @@ type ListTasksService interface {
 
 type AddTaskService interface {
 	AddTask(ctx context.Context, title string) (*entity.Task, error)
+}
+
+type RegisterUserService interface {
+	RegisterUser(ctx context.Context, name, password, role string) (*entity.User, error)
 }

@@ -1,6 +1,6 @@
 package service
 
-//go:generate go run github.com/matryer/moq -out moq_test.go . TaskAdder TaskLister
+//go:generate go run github.com/matryer/moq -out moq_test.go . TaskAdder TaskLister UserRegisterer
 
 import (
 	"context"
@@ -15,4 +15,8 @@ type TaskAdder interface {
 
 type TaskLister interface {
 	ListTasks(ctx context.Context, db store.Queryer) (entity.Tasks, error)
+}
+
+type UserRegisterer interface {
+	RegisterUser(ctx context.Context, db store.Executer, u *entity.User) (int64, error)
 }
