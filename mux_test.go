@@ -19,10 +19,10 @@ func TestNewMux(t *testing.T) {
 		t.Fatalf("failed to create config: %v", err)
 	}
 
-	// for local development (not in CI)
-	if os.Getenv("CI") == "" {
-		cfg.DBHost = "127.0.0.1"
-		cfg.DBPort = 13306
+	cfg.DBHost = "127.0.0.1"
+	cfg.DBPort = 13306
+	if _, defined := os.LookupEnv("CI"); defined {
+		cfg.DBPort = 3306
 	}
 
 	w := httptest.NewRecorder()
