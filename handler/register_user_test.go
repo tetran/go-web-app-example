@@ -13,7 +13,7 @@ import (
 	"github.com/tetran/go-web-app-example/testutil"
 )
 
-func TestAddTask(t *testing.T) {
+func TestRegisterUser(t *testing.T) {
 	t.Parallel()
 
 	type want struct {
@@ -25,17 +25,17 @@ func TestAddTask(t *testing.T) {
 		want    want
 	}{
 		"ok": {
-			reqFile: "testdata/add_task/ok_req.json.golden",
+			reqFile: "testdata/register_user/ok_req.json.golden",
 			want: want{
 				status:  http.StatusCreated,
-				rspFile: "testdata/add_task/ok_rsp.json.golden",
+				rspFile: "testdata/register_user/ok_rsp.json.golden",
 			},
 		},
 		"badRequest": {
-			reqFile: "testdata/add_task/bad_request_req.json.golden",
+			reqFile: "testdata/register_user/bad_request_req.json.golden",
 			want: want{
 				status:  http.StatusBadRequest,
-				rspFile: "testdata/add_task/bad_request_rsp.json.golden",
+				rspFile: "testdata/register_user/bad_request_rsp.json.golden",
 			},
 		},
 	}
@@ -48,19 +48,19 @@ func TestAddTask(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(
 				http.MethodPost,
-				"/tasks",
+				"/users",
 				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
 
-			moq := &AddTaskServiceMock{}
-			moq.AddTaskFunc = func(ctx context.Context, title string) (*entity.Task, error) {
+			moq := &RegisterUserServiceMock{}
+			moq.RegisterUserFunc = func(ctx context.Context, name, password, role string) (*entity.User, error) {
 				if tt.want.status == http.StatusCreated {
-					return &entity.Task{ID: 1}, nil
+					return &entity.User{ID: 1}, nil
 				}
 				return nil, errors.New("error from mock")
 			}
 
-			sut := AddTask{
+			sut := RegisterUser{
 				Service:   moq,
 				Validator: validator.New(),
 			}

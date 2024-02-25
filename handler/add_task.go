@@ -3,15 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/tetran/go-web-app-example/entity"
-	"github.com/tetran/go-web-app-example/store"
 )
 
 type AddTask struct {
-	Store     *store.TaskStore
+	Service   AddTaskService
 	Validator *validator.Validate
 }
 
@@ -36,12 +33,7 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := &entity.Task{
-		Title:     b.Title,
-		Status:    entity.TaskStatusTodo,
-		CreatedAt: time.Now(),
-	}
-	id, err := store.Tasks.Add(t)
+	t, err := at.Service.AddTask(ctx, b.Title)
 	if err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
@@ -51,6 +43,6 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	resp := struct {
 		ID int `json:"id"`
-	}{ID: id}
+	}{ID: int(t.ID)}
 	RespondJSON(ctx, w, resp, http.StatusCreated)
 }

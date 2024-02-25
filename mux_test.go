@@ -1,16 +1,36 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/tetran/go-web-app-example/config"
 )
 
 func TestNewMux(t *testing.T) {
+	// t.Skip("TODO: ")
+
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("failed to create config: %v", err)
+	}
+
+	cfg.DBHost = "127.0.0.1"
+	cfg.DBPort = 13306
+	if _, defined := os.LookupEnv("CI"); defined {
+		cfg.DBPort = 3306
+	}
+
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/health", nil)
-	sut := NewMux()
+	sut, _, err := NewMux(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("failed to create mux: %v", err)
+	}
 	sut.ServeHTTP(w, r)
 	resp := w.Result()
 	t.Cleanup(func() { _ = resp.Body.Close() })
