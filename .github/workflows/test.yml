@@ -42,6 +42,9 @@ jobs:
           go-version: '>=1.18'
       - uses: actions/checkout@v3
       - run: |
+          cp auth/cert/public.pem.example auth/cert/public.pem
+          cp auth/cert/secret.pem.example auth/cert/secret.pem
+      - run: |
           go install github.com/sqldef/sqldef/cmd/mysqldef@latest
           mysqldef -u gotodo -p gotodo -h 127.0.0.1 -P 3306 gotodo < ./_tools/mysql/schema.sql
       - run: go test ./... -coverprofile=coverage.out
