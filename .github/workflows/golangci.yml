@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
+      - run: |
+          cp auth/cert/public.pem.example auth/cert/public.pem
+          cp auth/cert/secret.pem.example auth/cert/secret.pem
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
