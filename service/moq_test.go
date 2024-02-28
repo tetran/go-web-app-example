@@ -98,7 +98,7 @@ var _ TaskLister = &TaskListerMock{}
 //
 //		// make and configure a mocked TaskLister
 //		mockedTaskLister := &TaskListerMock{
-//			ListTasksFunc: func(ctx context.Context, db store.Queryer) (entity.Tasks, error) {
+//			ListTasksFunc: func(ctx context.Context, db store.Queryer, uid entity.UserID) (entity.Tasks, error) {
 //				panic("mock out the ListTasks method")
 //			},
 //		}
@@ -109,7 +109,7 @@ var _ TaskLister = &TaskListerMock{}
 //	}
 type TaskListerMock struct {
 	// ListTasksFunc mocks the ListTasks method.
-	ListTasksFunc func(ctx context.Context, db store.Queryer) (entity.Tasks, error)
+	ListTasksFunc func(ctx context.Context, db store.Queryer, uid entity.UserID) (entity.Tasks, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -119,27 +119,31 @@ type TaskListerMock struct {
 			Ctx context.Context
 			// Db is the db argument value.
 			Db store.Queryer
+			// UID is the uid argument value.
+			UID entity.UserID
 		}
 	}
 	lockListTasks sync.RWMutex
 }
 
 // ListTasks calls ListTasksFunc.
-func (mock *TaskListerMock) ListTasks(ctx context.Context, db store.Queryer) (entity.Tasks, error) {
+func (mock *TaskListerMock) ListTasks(ctx context.Context, db store.Queryer, uid entity.UserID) (entity.Tasks, error) {
 	if mock.ListTasksFunc == nil {
 		panic("TaskListerMock.ListTasksFunc: method is nil but TaskLister.ListTasks was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
 		Db  store.Queryer
+		UID entity.UserID
 	}{
 		Ctx: ctx,
 		Db:  db,
+		UID: uid,
 	}
 	mock.lockListTasks.Lock()
 	mock.calls.ListTasks = append(mock.calls.ListTasks, callInfo)
 	mock.lockListTasks.Unlock()
-	return mock.ListTasksFunc(ctx, db)
+	return mock.ListTasksFunc(ctx, db, uid)
 }
 
 // ListTasksCalls gets all the calls that were made to ListTasks.
@@ -149,10 +153,12 @@ func (mock *TaskListerMock) ListTasks(ctx context.Context, db store.Queryer) (en
 func (mock *TaskListerMock) ListTasksCalls() []struct {
 	Ctx context.Context
 	Db  store.Queryer
+	UID entity.UserID
 } {
 	var calls []struct {
 		Ctx context.Context
 		Db  store.Queryer
+		UID entity.UserID
 	}
 	mock.lockListTasks.RLock()
 	calls = mock.calls.ListTasks
@@ -235,5 +241,83 @@ func (mock *UserRegistererMock) RegisterUserCalls() []struct {
 	mock.lockRegisterUser.RLock()
 	calls = mock.calls.RegisterUser
 	mock.lockRegisterUser.RUnlock()
+	return calls
+}
+
+// Ensure, that UserGetterMock does implement UserGetter.
+// If this is not the case, regenerate this file with moq.
+var _ UserGetter = &UserGetterMock{}
+
+// UserGetterMock is a mock implementation of UserGetter.
+//
+//	func TestSomethingThatUsesUserGetter(t *testing.T) {
+//
+//		// make and configure a mocked UserGetter
+//		mockedUserGetter := &UserGetterMock{
+//			GetUserFunc: func(ctx context.Context, db store.Queryer, name string) (*entity.User, error) {
+//				panic("mock out the GetUser method")
+//			},
+//		}
+//
+//		// use mockedUserGetter in code that requires UserGetter
+//		// and then make assertions.
+//
+//	}
+type UserGetterMock struct {
+	// GetUserFunc mocks the GetUser method.
+	GetUserFunc func(ctx context.Context, db store.Queryer, name string) (*entity.User, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// GetUser holds details about calls to the GetUser method.
+		GetUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Db is the db argument value.
+			Db store.Queryer
+			// Name is the name argument value.
+			Name string
+		}
+	}
+	lockGetUser sync.RWMutex
+}
+
+// GetUser calls GetUserFunc.
+func (mock *UserGetterMock) GetUser(ctx context.Context, db store.Queryer, name string) (*entity.User, error) {
+	if mock.GetUserFunc == nil {
+		panic("UserGetterMock.GetUserFunc: method is nil but UserGetter.GetUser was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Db   store.Queryer
+		Name string
+	}{
+		Ctx:  ctx,
+		Db:   db,
+		Name: name,
+	}
+	mock.lockGetUser.Lock()
+	mock.calls.GetUser = append(mock.calls.GetUser, callInfo)
+	mock.lockGetUser.Unlock()
+	return mock.GetUserFunc(ctx, db, name)
+}
+
+// GetUserCalls gets all the calls that were made to GetUser.
+// Check the length with:
+//
+//	len(mockedUserGetter.GetUserCalls())
+func (mock *UserGetterMock) GetUserCalls() []struct {
+	Ctx  context.Context
+	Db   store.Queryer
+	Name string
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Db   store.Queryer
+		Name string
+	}
+	mock.lockGetUser.RLock()
+	calls = mock.calls.GetUser
+	mock.lockGetUser.RUnlock()
 	return calls
 }
