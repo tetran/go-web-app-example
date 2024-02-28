@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+
+tmp/
+
+auth/cert/secret.pem
+auth/cert/public.pem

@@ -21,8 +21,11 @@ func TestNewMux(t *testing.T) {
 
 	cfg.DBHost = "127.0.0.1"
 	cfg.DBPort = 13306
+	cfg.RedisHost = "127.0.0.1"
+	cfg.RedisPort = 16379
 	if _, defined := os.LookupEnv("CI"); defined {
 		cfg.DBPort = 3306
+		cfg.RedisPort = 6379
 	}
 
 	w := httptest.NewRecorder()

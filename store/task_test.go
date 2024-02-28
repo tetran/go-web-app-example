@@ -10,31 +10,58 @@ import (
 	"github.com/tetran/go-web-app-example/clock"
 	"github.com/tetran/go-web-app-example/entity"
 	"github.com/tetran/go-web-app-example/testutil"
+	"github.com/tetran/go-web-app-example/testutil/fixture"
 )
 
-func prepareTasks(ctx context.Context, t *testing.T, con Executer) entity.Tasks {
+func prepareUser(ctx context.Context, t *testing.T, db Executer) entity.UserID {
+	t.Helper()
+	u := fixture.User(nil)
+	result, err := db.NamedExecContext(ctx,
+		"INSERT INTO users (name, password, role, created_at, updated_at) VALUES (:name, :password, :role, :created_at, :updated_at);",
+		u,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert user: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("failed to get last insert id: %v", err)
+	}
+	return entity.UserID(id)
+}
+
+func prepareTasks(ctx context.Context, t *testing.T, con Executer) (entity.UserID, entity.Tasks) {
 	t.Helper()
 
 	if _, err := con.ExecContext(ctx, "TRUNCATE TABLE tasks;"); err != nil {
 		t.Fatalf("failed to truncate table: %v", err)
 	}
 
+	userId := prepareUser(ctx, t, con)
+	otherUserId := prepareUser(ctx, t, con)
+
 	c := clock.FixedClocker{}
 	wants := entity.Tasks{
 		{
-			Title: "wants task 1", Status: "todo", CreatedAt: c.Now(), UpdatedAt: c.Now(),
+			UserID: userId, Title: "wants task 1", Status: "todo", CreatedAt: c.Now(), UpdatedAt: c.Now(),
 		},
 		{
-			Title: "wants task 2", Status: "done", CreatedAt: c.Now(), UpdatedAt: c.Now(),
+			UserID: userId, Title: "wants task 2", Status: "done", CreatedAt: c.Now(), UpdatedAt: c.Now(),
 		},
 		{
-			Title: "wants task 3", Status: "doing", CreatedAt: c.Now(), UpdatedAt: c.Now(),
+			UserID: userId, Title: "wants task 3", Status: "doing", CreatedAt: c.Now(), UpdatedAt: c.Now(),
+		},
+	}
+	not_wants := entity.Tasks{
+		{
+			UserID: otherUserId, Title: "not wants task 1", Status: "todo", CreatedAt: c.Now(), UpdatedAt: c.Now(),
 		},
 	}
 
+	inserts := append(wants, not_wants...)
 	result, err := con.NamedExecContext(ctx,
-		"INSERT INTO tasks (title, status, created_at, updated_at) VALUES (:title, :status, :created_at, :updated_at);",
-		wants,
+		"INSERT INTO tasks (user_id, title, status, created_at, updated_at) VALUES (:user_id, :title, :status, :created_at, :updated_at);",
+		inserts,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -49,7 +76,7 @@ func prepareTasks(ctx context.Context, t *testing.T, con Executer) entity.Tasks 
 	wants[1].ID = entity.TaskID(id + 1)
 	wants[2].ID = entity.TaskID(id + 2)
 
-	return wants
+	return userId, wants
 }
 
 // Use real database for list tasks
@@ -62,9 +89,9 @@ func TestListTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wants := prepareTasks(ctx, t, tx)
+	uid, wants := prepareTasks(ctx, t, tx)
 	sut := &Repository{}
-	gots, err := sut.ListTasks(ctx, tx)
+	gots, err := sut.ListTasks(ctx, tx, uid)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -80,7 +107,7 @@ func TestAddTask(t *testing.T) {
 	c := clock.FixedClocker{}
 	var wantId int64 = 20
 	okTask := &entity.Task{
-		Title: "test task", Status: "todo", CreatedAt: c.Now(), UpdatedAt: c.Now(),
+		UserID: 1, Title: "test task", Status: "todo", CreatedAt: c.Now(), UpdatedAt: c.Now(),
 	}
 
 	db, mock, err := sqlmock.New()
@@ -89,8 +116,8 @@ func TestAddTask(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = db.Close() })
 
-	mock.ExpectExec(`INSERT INTO tasks \(title, status, created_at, updated_at\) VALUES \(\?, \?, \?, \?\);`).
-		WithArgs(okTask.Title, okTask.Status, okTask.CreatedAt, okTask.UpdatedAt).
+	mock.ExpectExec(`INSERT INTO tasks \(user_id, title, status, created_at, updated_at\) VALUES \(\?, \?, \?, \?, \?\);`).
+		WithArgs(okTask.UserID, okTask.Title, okTask.Status, okTask.CreatedAt, okTask.UpdatedAt).
 		WillReturnResult(sqlmock.NewResult(wantId, 1))
 
 	xdb := sqlx.NewDb(db, "mysql")

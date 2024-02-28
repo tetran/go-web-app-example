@@ -14,7 +14,7 @@ type TaskStore struct {
 
 var (
 	Tasks       = &TaskStore{Tasks: map[entity.TaskID]*entity.Task{}}
-	ErrNotFound = errors.New("task not found")
+	ErrNotFound = errors.New("not found")
 )
 
 func (ts *TaskStore) Add(t *entity.Task) (int, error) {
